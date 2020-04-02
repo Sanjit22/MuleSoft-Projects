@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+    <http:listener-config name="countrydetails-pro-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="countrydetails-pro-api-config" api="resource::f515c9b2-0ed3-4d22-8471-445c555b6983:countrydetails-pro-api:1.0.0:raml:zip:countrydetails-pro-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="75dc93fd-b55b-4001-8a76-c8d56a0e8f79" >
+		<http:request-connection host="fullcountrydetails-sys-api.us-e2.cloudhub.io" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration1" doc:name="HTTP Request configuration" doc:id="9d68b9e6-734f-41ae-922b-4d9fababaf4b" >
+		<http:request-connection host="mongodb-sys-api.us-e2.cloudhub.io" />
+	</http:request-config>
+	<http:request-config name="HTTP_Request_configuration2" doc:name="HTTP Request configuration" doc:id="02258d69-2b6d-497b-8fa4-b464c3cfe189" >
+		<http:request-connection host=" file-sys-api.us-e2.cloudhub.io" />
+	</http:request-config>
+	<flow name="countrydetails-pro-api-main">
+        <http:listener config-ref="countrydetails-pro-api-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="countrydetails-pro-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="countrydetails-pro-api-console">
+        <http:listener config-ref="countrydetails-pro-api-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="countrydetails-pro-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\countrydetailspro:countrydetails-pro-api-config">
+        <set-variable value="#[attributes.queryParams.countryName]" doc:name="Set Variable" doc:id="a8cf4106-152c-48b7-8025-9cb20f921781" variableName="countryNameVar"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ae216291-900d-4cfd-b6a9-a64f33b45c18" message="#[payload]"/>
+		<http:request method="GET" doc:name="Request" doc:id="4fcbcfc1-051d-411f-8791-7213f83e6292" config-ref="HTTP_Request_configuration" path="/api/countrydetails">
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"countryName" : vars.countryNameVar
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" doc:id="151d1196-9a42-4c7f-a732-b941788f79a5">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	ISOCode: payload.ISOCode,
+	CountryName: payload.CountryName,
+	CapitalCity: payload.CapitalCity,
+	PhoneCode: payload.PhoneCode,
+	ContinentCode: payload.ContinentCode,
+	CurrencyISOCode: payload.CurrencyISOCode,
+	CountryFlag: payload.CountryFlag,
+	Language: {
+		LanguageISOCode: payload.Language.LanguageISOCode,
+		LanguageName: payload.Language.LanguageName
+	}
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="16c394c2-b3d4-43f9-939b-6085b296f2b1" message="#[payload]"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="1cd46fa7-abe5-4f82-af41-c09d431237ed" variableName="CountryDetailsVar"/>
+		<async doc:name="Async" doc:id="e6f39ecf-7b2b-4551-9a2c-43f54b0d8f73">
+			<http:request method="POST" doc:name="Request" doc:id="37f2a58e-ced3-4be8-8558-594182c26cb4" config-ref="HTTP_Request_configuration2" path="/api/insertintofile">
+				<http:body ><![CDATA[#[vars.CountryDetailsVar]]]></http:body>
+			</http:request>
+			<logger level="INFO" doc:name="Logger" doc:id="f96c7cb5-6afb-4843-902d-ffea420f6d1f" message="file insertion sucessful"/>
+		</async>
+		<async doc:name="Async" doc:id="0938be89-0d52-4ff9-b2dc-963195f5262c">
+			<http:request method="POST" doc:name="Request" doc:id="8762e3a3-6006-4c8d-9376-549ed779a263" config-ref="HTTP_Request_configuration1" path="/api/datainsertmongo" />
+			<logger level="INFO" doc:name="Logger" doc:id="8ec1b4fe-52be-4cbb-b7e4-d1df1440ddfa" message="data insertion in mongoDB sucessful"/>
+		</async>
+		<ee:transform doc:name="Transform Message" doc:id="8d85e16f-8254-4a00-93d9-5ce4c56cf854" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	countrydetails: vars.CountryDetailsVar
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+    </flow>
+</mule>
