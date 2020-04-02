@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="stream_details" format="json">
+      <types:shape format="weave" example="examples/stream_details.json"><![CDATA[%dw 2.0
+
+type stream_details = Array<{|  idstreamDetails: Number {"typeId": "int"},   stream: String,   subject: String|}> {"example": "[{\\\"idstreamDetails\\\":100,\\\"stream\\\":\\\"Science\\\",\\\"subject\\\":\\\"Physics\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="stream_subjects" format="json">
+      <types:shape format="weave" example="examples/stream_subjects.json"><![CDATA[%dw 2.0
+
+type stream_subjects = Array<{|  idstreamDetails: Number {"typeId": "int"},   stream: String,   subject: String|}> {"example": "[{\\\"idstreamDetails\\\":106,\\\"stream\\\":\\\"Arts\\\",\\\"subject\\\":\\\"english\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="student_config" format="json">
+      <types:shape format="weave" example="examples/data_student.json"><![CDATA[%dw 2.0
+
+type student_config = Array<{|  studentsId: Number {"typeId": "int"},   stream: String,   name: String|}> {"example": "[{\\\"studentsId\\\":1234,\\\"stream\\\":\\\"Science\\\",\\\"name\\\":\\\"Sanjit Karmakar\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="student_details" format="json">
+      <types:shape format="weave" example="examples/studentDetails.json"><![CDATA[%dw 2.0
+
+type student_details = Array<{|  studentsId: Number {"typeId": "int"},   stream: String,   name: String|}> {"example": "[{\\\"studentsId\\\":5641,\\\"stream\\\":\\\"Science\\\",\\\"name\\\":\\\"Sanjit Karmakar\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#089d28e0-52f5-44cd-b85d-7c1ab6cebd12">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="student_config"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="student_details"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#bc1e48fe-edcd-49da-a744-3797e0d3974d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="stream_subjects"/>
+        </types:message>
+      </types:input-event>
+      <types:output-event>
+        <types:message>
+          <types:payload type="stream_details"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
